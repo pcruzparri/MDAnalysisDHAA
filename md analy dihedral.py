@@ -1,5 +1,6 @@
 import MDAnalysis as mda
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 import os
 import numpy as np
 import math
@@ -93,9 +94,11 @@ zn_atoms = u.select_atoms("name ZN")
 for i in tqdm(range(0,8)):
     for frame in tqdm(u.trajectory[0:10001]):
 
-        coordination_distances = [(np.linalg.norm(zn.position - o_carbonyl.positions[i]), np.linalg.norm(zn.position - phosphorus.positions[i])) for zn in zn_atoms]
-        min_coordination_distance_squared = min([dist_pair[0]**2*dist_pair[1]**2 for dist_pair in coordination_distances])
-        distances.append(min_coordination_distance_squared)
+        #coordination_distances = [(np.linalg.norm(zn.position - o_carbonyl.positions[i]), np.linalg.norm(zn.position - phosphorus.positions[i])) for zn in zn_atoms]
+        #min_coordination_distance_squared = min([dist_pair[0]**2*dist_pair[1]**2 for dist_pair in coordination_distances])
+        #distances.append(min_coordination_distance_squared)
+        distances.append(np.linalg.norm(zn_atoms.positions - phosphorus.positions[i], axis=1).min())
+
         # Calculate the vectors needed for phi and psi dihedral angles for this frame
         alpha_nitro_vect = c_nitrogen.positions[i] - c_alpha.positions[i] #normal for phi, ref end for psi
         nitro_carbo_vect = carboxyl_meas.positions[i] - c_nitrogen.positions[i] #moving end phi
@@ -128,11 +131,10 @@ for i in tqdm(range(0,8)):
 sc = plt.scatter(phi_x, psi_y, 
                  alpha=0.2, 
                  marker='o', 
-                 sizes=[5 for _ in phi_x], 
+                 sizes=[10 for _ in phi_x], 
                  c=distances, 
                  cmap='hot',
-                 vmin=0,
-                 vmax=max(distances),
+                 norm=mcolors.PowerNorm(gamma=0.4, vmin=0, vmax=max(distances)),
                  edgecolors='none')
 plt.xlabel("$\\phi$")
 plt.ylabel("$\\psi$")

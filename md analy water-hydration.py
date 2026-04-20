@@ -4,6 +4,7 @@ import os
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 
 script_dir = os.path.dirname(__file__)
@@ -18,24 +19,18 @@ print(len(zincs))
 
 center_atom = zincs[0]
 
-radius = 2.08
-oxy_hydrated = u.select_atoms(f"name OH2 and around {radius} index {center_atom.index}")
+radius = 2.25
+oxy_hydrated = u.select_atoms(f"type O and around {radius} index {center_atom.index}")
 
 
 
-i=1
-for zinc in zincs:
-    y=[]
-    for frame in u.trajectory[0:10001]:
+y=[]
+for zinc in tqdm(zincs):
+    for frame in tqdm(u.trajectory[0:10001]):
         y.append(len(u.select_atoms(f"name OH2 and around {radius} index {zinc.index}")))
-    x = list(range(1,10001)) #time
-    print(f'y:{len(y)}, x:{len(x)}')
-    plt.scatter(x,y,label=f"Zn #{i}")
-    plt.xlabel("Time (ps)")
-    plt.ylabel("Num O")
-    plt.show()
-    i+=1
 
-plt.xlabel("Time (ps)")
-plt.ylabel("Num O")
+print(set(y))
+plt.hist(y, bins=len(set(y)), align='mid')
+plt.xlabel("Coordination Number")
+plt.ylabel("Frequency")
 plt.show()
