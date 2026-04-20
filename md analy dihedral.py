@@ -83,11 +83,14 @@ if np.cross(norm_moving_psi, norm_ref_psi)[0]/alpha_carbo_vect[0] > 0:
 
 phi_x = []
 psi_y = []
+distances = []
+zn_atoms = u.select_atoms("name ZN")
+
 # TODO: Make into function, check for optimization.
 for i in range(0,8):
     for frame in u.trajectory[0:10001]:
 
-        
+        distances.append(min([np.linalg.norm(zn.position - c_alpha.positions[i]) for zn in zn_atoms]))
         # Calculate the vectors needed for phi and psi dihedral angles for this frame
         alpha_nitro_vect = c_nitrogen.positions[i] - c_alpha.positions[i] #normal for phi, ref end for psi
         nitro_carbo_vect = carboxyl_meas.positions[i] - c_nitrogen.positions[i] #moving end phi
@@ -116,9 +119,19 @@ for i in range(0,8):
         phi_x.append(phi_angle)
         psi_y.append(psi_angle)
 
-plt.scatter(phi_x, psi_y, alpha=0.2, marker='.', edgecolors='none')
+
+sc = plt.scatter(phi_x, psi_y, 
+                 alpha=0.2, 
+                 marker='o', 
+                 sizes=[15 for _ in phi_x], 
+                 c=distances, 
+                 cmap='hot',
+                 vmin=0,
+                 vmax=max(distances),
+                 edgecolors='none')
 plt.xlabel("$\\phi$")
 plt.ylabel("$\\psi$")
 plt.xlim(-180, 180)
 plt.ylim(-180, 180)
+plt.colorbar(sc, label="Distance to nearest $Zn^{2+}$ atom")
 plt.show()
