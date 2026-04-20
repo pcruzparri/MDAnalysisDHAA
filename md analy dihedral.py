@@ -4,6 +4,7 @@ import os
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 
 script_dir = os.path.dirname(__file__)
@@ -33,6 +34,8 @@ c_carboxyl = u.select_atoms('name C2')
 c_nitrogen = u.select_atoms('name N2')
 carboxyl_meas = u.select_atoms('name C4') #For Phi
 nitrogen_meas = u.select_atoms('name N1') #For Psi
+phosphorus = u.select_atoms('name P')
+o_carbonyl = u.select_atoms('name O6')
 
 print(type(c_nitrogen.positions[0]))
 
@@ -87,10 +90,12 @@ distances = []
 zn_atoms = u.select_atoms("name ZN")
 
 # TODO: Make into function, check for optimization.
-for i in range(0,8):
-    for frame in u.trajectory[0:10001]:
+for i in tqdm(range(0,8)):
+    for frame in tqdm(u.trajectory[0:10001]):
 
-        distances.append(min([np.linalg.norm(zn.position - c_alpha.positions[i]) for zn in zn_atoms]))
+        coordination_distances = [(np.linalg.norm(zn.position - o_carbonyl.positions[i]), np.linalg.norm(zn.position - phosphorus.positions[i])) for zn in zn_atoms]
+        min_coordination_distance_squared = min([dist_pair[0]**2*dist_pair[1]**2 for dist_pair in coordination_distances])
+        distances.append(min_coordination_distance_squared)
         # Calculate the vectors needed for phi and psi dihedral angles for this frame
         alpha_nitro_vect = c_nitrogen.positions[i] - c_alpha.positions[i] #normal for phi, ref end for psi
         nitro_carbo_vect = carboxyl_meas.positions[i] - c_nitrogen.positions[i] #moving end phi
@@ -123,7 +128,7 @@ for i in range(0,8):
 sc = plt.scatter(phi_x, psi_y, 
                  alpha=0.2, 
                  marker='o', 
-                 sizes=[15 for _ in phi_x], 
+                 sizes=[5 for _ in phi_x], 
                  c=distances, 
                  cmap='hot',
                  vmin=0,
